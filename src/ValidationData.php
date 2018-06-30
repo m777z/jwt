@@ -24,24 +24,28 @@ class ValidationData
      */
     private $items;
 
+    private $timeFields = ['iat', 'nbf', 'exp'];
+
+    private $leeways = [];
+
     /**
      * Initializes the object
      *
      * @param int $currentTime
+     * @param array $leeways
      */
-    public function __construct($currentTime = null)
+    public function __construct($currentTime = null, $leeways = [])
     {
         $currentTime = $currentTime ?: time();
+        $this->leeways = array_intersect_key($leeways, array_flip($this->timeFields));
 
         $this->items = [
             'jti' => null,
             'iss' => null,
             'aud' => null,
-            'sub' => null,
-            'iat' => $currentTime,
-            'nbf' => $currentTime,
-            'exp' => $currentTime
+            'sub' => null
         ];
+        $this->setCurrentTime($currentTime);
     }
 
     /**
@@ -51,7 +55,7 @@ class ValidationData
      */
     public function setId($id)
     {
-        $this->items['jti'] = (string) $id;
+        $this->items['jti'] = (string)$id;
     }
 
     /**
@@ -61,7 +65,7 @@ class ValidationData
      */
     public function setIssuer($issuer)
     {
-        $this->items['iss'] = (string) $issuer;
+        $this->items['iss'] = (string)$issuer;
     }
 
     /**
@@ -71,7 +75,7 @@ class ValidationData
      */
     public function setAudience($audience)
     {
-        $this->items['aud'] = (string) $audience;
+        $this->items['aud'] = (string)$audience;
     }
 
     /**
@@ -81,7 +85,7 @@ class ValidationData
      */
     public function setSubject($subject)
     {
-        $this->items['sub'] = (string) $subject;
+        $this->items['sub'] = (string)$subject;
     }
 
     /**
@@ -91,9 +95,13 @@ class ValidationData
      */
     public function setCurrentTime($currentTime)
     {
-        $this->items['iat'] = (int) $currentTime;
-        $this->items['nbf'] = (int) $currentTime;
-        $this->items['exp'] = (int) $currentTime;
+        foreach ($this->timeFields as $field) {
+            if (isset($this->leeways[$field]) && is_int($this->leeways[$field])) {
+                $this->items[$field] = (int)$currentTime + $this->leeways[$field];
+            } else {
+                $this->items[$field] = (int)$currentTime;
+            }
+        }
     }
 
     /**
