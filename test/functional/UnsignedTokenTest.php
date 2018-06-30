@@ -31,14 +31,14 @@ class UnsignedTokenTest extends \PHPUnit_Framework_TestCase
      */
     public function builderCanGenerateAToken()
     {
-        $user = (object) ['name' => 'testing', 'email' => 'testing@abc.com'];
+        $user = (object)['name' => 'testing', 'email' => 'testing@abc.com'];
 
         $token = (new Builder())->setId(1)
-                              ->setAudience('http://client.abc.com')
-                              ->setIssuer('http://api.abc.com')
-                              ->setExpiration(self::CURRENT_TIME + 3000)
-                              ->set('user', $user)
-                              ->getToken();
+            ->setAudience('http://client.abc.com')
+            ->setIssuer('http://api.abc.com')
+            ->setExpiration(self::CURRENT_TIME + 3000)
+            ->set('user', $user)
+            ->getToken();
 
         $this->assertAttributeEquals(null, 'signature', $token);
         $this->assertEquals('http://client.abc.com', $token->getClaim('aud'));
@@ -54,17 +54,17 @@ class UnsignedTokenTest extends \PHPUnit_Framework_TestCase
      *
      * @depends builderCanGenerateAToken
      *
-     * @covers Lcobucci\JWT\Builder
-     * @covers Lcobucci\JWT\Parser
-     * @covers Lcobucci\JWT\Token
-     * @covers Lcobucci\JWT\Claim\Factory
-     * @covers Lcobucci\JWT\Claim\Basic
-     * @covers Lcobucci\JWT\Parsing\Encoder
-     * @covers Lcobucci\JWT\Parsing\Decoder
+     * @covers  Lcobucci\JWT\Builder
+     * @covers  Lcobucci\JWT\Parser
+     * @covers  Lcobucci\JWT\Token
+     * @covers  Lcobucci\JWT\Claim\Factory
+     * @covers  Lcobucci\JWT\Claim\Basic
+     * @covers  Lcobucci\JWT\Parsing\Encoder
+     * @covers  Lcobucci\JWT\Parsing\Decoder
      */
     public function parserCanReadAToken(Token $generated)
     {
-        $read = (new Parser())->parse((string) $generated);
+        $read = (new Parser())->parse((string)$generated);
 
         $this->assertEquals($generated, $read);
         $this->assertEquals('testing', $read->getClaim('user')->name);
@@ -75,16 +75,16 @@ class UnsignedTokenTest extends \PHPUnit_Framework_TestCase
      *
      * @depends builderCanGenerateAToken
      *
-     * @covers Lcobucci\JWT\Builder
-     * @covers Lcobucci\JWT\Parser
-     * @covers Lcobucci\JWT\Token
-     * @covers Lcobucci\JWT\ValidationData
-     * @covers Lcobucci\JWT\Claim\Factory
-     * @covers Lcobucci\JWT\Claim\Basic
-     * @covers Lcobucci\JWT\Claim\EqualsTo
-     * @covers Lcobucci\JWT\Claim\GreaterOrEqualsTo
-     * @covers Lcobucci\JWT\Parsing\Encoder
-     * @covers Lcobucci\JWT\Parsing\Decoder
+     * @covers  Lcobucci\JWT\Builder
+     * @covers  Lcobucci\JWT\Parser
+     * @covers  Lcobucci\JWT\Token
+     * @covers  Lcobucci\JWT\ValidationData
+     * @covers  Lcobucci\JWT\Claim\Factory
+     * @covers  Lcobucci\JWT\Claim\Basic
+     * @covers  Lcobucci\JWT\Claim\EqualsTo
+     * @covers  Lcobucci\JWT\Claim\GreaterOrEqualsTo
+     * @covers  Lcobucci\JWT\Parsing\Encoder
+     * @covers  Lcobucci\JWT\Parsing\Decoder
      */
     public function tokenValidationShouldReturnWhenEverythingIsFine(Token $generated)
     {
@@ -100,22 +100,46 @@ class UnsignedTokenTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider invalidValidationData
      *
-     * @depends builderCanGenerateAToken
+     * @depends      builderCanGenerateAToken
      *
-     * @covers Lcobucci\JWT\Builder
-     * @covers Lcobucci\JWT\Parser
-     * @covers Lcobucci\JWT\Token
-     * @covers Lcobucci\JWT\ValidationData
-     * @covers Lcobucci\JWT\Claim\Factory
-     * @covers Lcobucci\JWT\Claim\Basic
-     * @covers Lcobucci\JWT\Claim\EqualsTo
-     * @covers Lcobucci\JWT\Claim\GreaterOrEqualsTo
-     * @covers Lcobucci\JWT\Parsing\Encoder
-     * @covers Lcobucci\JWT\Parsing\Decoder
+     * @covers       Lcobucci\JWT\Builder
+     * @covers       Lcobucci\JWT\Parser
+     * @covers       Lcobucci\JWT\Token
+     * @covers       Lcobucci\JWT\ValidationData
+     * @covers       Lcobucci\JWT\Claim\Factory
+     * @covers       Lcobucci\JWT\Claim\Basic
+     * @covers       Lcobucci\JWT\Claim\EqualsTo
+     * @covers       Lcobucci\JWT\Claim\GreaterOrEqualsTo
+     * @covers       Lcobucci\JWT\Parsing\Encoder
+     * @covers       Lcobucci\JWT\Parsing\Decoder
      */
     public function tokenValidationShouldReturnFalseWhenExpectedDataDontMatch(ValidationData $data, Token $generated)
     {
         $this->assertFalse($generated->validate($data));
+    }
+
+    /**
+     * @test
+     *
+     * @depends builderCanGenerateAToken
+     *
+     * @covers  Lcobucci\JWT\Builder
+     * @covers  Lcobucci\JWT\Parser
+     * @covers  Lcobucci\JWT\Token
+     * @covers  Lcobucci\JWT\ValidationData
+     * @covers  Lcobucci\JWT\Claim\Factory
+     * @covers  Lcobucci\JWT\Claim\Basic
+     * @covers  Lcobucci\JWT\Claim\EqualsTo
+     * @covers  Lcobucci\JWT\Claim\GreaterOrEqualsTo
+     * @covers  Lcobucci\JWT\Parsing\Encoder
+     * @covers  Lcobucci\JWT\Parsing\Decoder
+     */
+    public function tokenValidationShouldReturnTrueWhenExpectedDataMatchBecauseOfLeeway(Token $generated)
+    {
+        $notExpiredDueToLeeway = new ValidationData(self::CURRENT_TIME + 3020, ['exp' => -50]);
+        $notExpiredDueToLeeway->setAudience('http://client.abc.com');
+        $notExpiredDueToLeeway->setIssuer('http://api.abc.com');
+        $this->assertTrue($generated->validate($notExpiredDueToLeeway));
     }
 
     public function invalidValidationData()

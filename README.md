@@ -79,7 +79,7 @@ $data->setIssuer('http://example.com');
 $data->setAudience('http://example.org');
 $data->setId('4f1g23a12aa');
 
-var_dump($token->validate($data)); // false, because token cannot be used before of now() + 60
+var_dump($token->validate($data)); // false, because token cannot be used before now() + 60
 
 $data->setCurrentTime(time() + 61); // changing the validation time to future
 
@@ -88,6 +88,27 @@ var_dump($token->validate($data)); // true, because current time is between "nbf
 $data->setCurrentTime(time() + 4000); // changing the validation time to future
 
 var_dump($token->validate($data)); // false, because token is expired since current time is greater than exp
+
+// We can also use leeway to deal with clock skew.
+// It uses the current time to validate, except that iat will add 5 seconds, nbf will add 10, and exp will subtract 20
+$dataWithLeeway = new ValidationData(null, ['iat' => 5, 'nbf' => 14, 'exp' => -20]); 
+$dataWithLeeway->setIssuer('http://example.com');
+$dataWithLeeway->setAudience('http://example.org');
+$dataWithLeeway->setId('4f1g23a12aa');
+
+var_dump($token->validate($dataWithLeeway)); // false, because token can't be used before now() + 60 and it's now() + 14
+
+$dataWithLeeway->setCurrentTime(time() + 51); // changing the validation time to future
+
+var_dump($token->validate($dataWithLeeway)); // true, because current time plus leeway is between "nbf" and "exp" claims
+
+$dataWithLeeway->setCurrentTime(time() + 3610); // changing the validation time to future but within leeway
+
+var_dump($token->validate($dataWithLeeway)); // true, because current time + (-20 seconds leeway) is less than exp
+
+$dataWithLeeway->setCurrentTime(time() + 4000); // changing the validation time to future outside of leeway
+
+var_dump($token->validate($dataWithLeeway)); // false, because token is expired since current time is greater than exp
 ```
 
 #### Important
@@ -97,6 +118,11 @@ var_dump($token->validate($data)); // false, because token is expired since curr
 configured in ```ValidationData``` they will be ignored by ```Token::validate()```.
 - ```exp```, ```nbf``` and ```iat``` claims are configured by default in ```ValidationData::__construct()```
 with the current UNIX time (```time()```).
+- The values for the keys in the  optional ```$leeway``` array of ```ValidationData``` will add that number of seconds 
+to the time that would otherwise be used for validation of the given claim. If using leeway, you will generally want to 
+pass a positive value for ```iat``` and ```nbf``` claims (pretending that we are further in the future) and a negative 
+value for ```exp``` claims (pretending that we are further in the past). Keys other than   ```iat```, ```nbf```, and 
+```exp``` in the ```$leeway``` array will be ignored.
 
 ## Token signature
 

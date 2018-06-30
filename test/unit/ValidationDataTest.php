@@ -29,11 +29,63 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
+     * @covers Lcobucci\JWT\ValidationData::__construct
+     */
+    public function constructorWithLeewayShouldConfigureTheItems()
+    {
+        $expected = $this->createExpectedData(null, null, null, null, 106, 111, 80);
+        $data = new ValidationData(100, ['iat' => 6, 'nbf' => 11, 'exp' => -20]);
+
+        $this->assertAttributeSame($expected, 'items', $data);
+    }
+
+    /**
+     * @test
+     *
+     * @covers Lcobucci\JWT\ValidationData::__construct
+     */
+    public function constructorWithLeewayShouldChangeOnlyTheProvidedLeewayValues()
+    {
+        $expected = $this->createExpectedData(null, null, null, null, 100, 111, 80);
+        $data = new ValidationData(100, ['nbf' => 11, 'exp' => -20]);
+
+        $this->assertAttributeSame($expected, 'items', $data);
+    }
+
+    /**
+     * @test
+     *
+     * @covers Lcobucci\JWT\ValidationData::__construct
+     */
+    public function constructorWithLeewayShouldIgnoreExtraLeewayItems()
+    {
+        $expected = $this->createExpectedData(null, null, null, null, 106, 111, 80);
+        $data = new ValidationData(100, ['iat' => 6, 'nbf' => 11, 'exp' => -20, 'iss' => 5]);
+
+        $this->assertAttributeSame($expected, 'items', $data);
+    }
+
+    /**
+     * @test
+     *
+     * @covers Lcobucci\JWT\ValidationData::__construct
+     */
+    public function constructorWithLeewayShouldIgnoreNonIntValues()
+    {
+        $expected = $this->createExpectedData(null, null, null, null, 100, 100, 100);
+        $data = new ValidationData(100, ['iat' => "asdf", 'nbf' => null, 'exp' => []]);
+
+        $this->assertAttributeSame($expected, 'items', $data);
+    }
+
+    /**
+     * @test
+     *
      * @dataProvider claimValues
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses         Lcobucci\JWT\ValidationData::__construct
      *
-     * @covers Lcobucci\JWT\ValidationData::setId
+     * @covers       Lcobucci\JWT\ValidationData::setId
      */
     public function setIdShouldChangeTheId($id)
     {
@@ -49,9 +101,9 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider claimValues
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses         Lcobucci\JWT\ValidationData::__construct
      *
-     * @covers Lcobucci\JWT\ValidationData::setIssuer
+     * @covers       Lcobucci\JWT\ValidationData::setIssuer
      */
     public function setIssuerShouldChangeTheIssuer($iss)
     {
@@ -67,9 +119,9 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider claimValues
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses         Lcobucci\JWT\ValidationData::__construct
      *
-     * @covers Lcobucci\JWT\ValidationData::setAudience
+     * @covers       Lcobucci\JWT\ValidationData::setAudience
      */
     public function setAudienceShouldChangeTheAudience($aud)
     {
@@ -85,9 +137,9 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider claimValues
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses         Lcobucci\JWT\ValidationData::__construct
      *
-     * @covers Lcobucci\JWT\ValidationData::setSubject
+     * @covers       Lcobucci\JWT\ValidationData::setSubject
      */
     public function setSubjectShouldChangeTheSubject($sub)
     {
@@ -101,7 +153,7 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses   Lcobucci\JWT\ValidationData::__construct
      *
      * @covers Lcobucci\JWT\ValidationData::setCurrentTime
      */
@@ -117,7 +169,23 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses   Lcobucci\JWT\ValidationData::__construct
+     *
+     * @covers Lcobucci\JWT\ValidationData::setCurrentTime
+     */
+    public function setCurrentTimeShouldChangeTheTimeBasedValuesUsingLeeway()
+    {
+        $expected = $this->createExpectedData(null, null, null, null, 25, 30, 10);
+        $data = new ValidationData(15, ['iat' => 5, 'nbf' => 10, 'exp' => -10]);
+        $data->setCurrentTime(20);
+
+        $this->assertAttributeSame($expected, 'items', $data);
+    }
+
+    /**
+     * @test
+     *
+     * @uses   Lcobucci\JWT\ValidationData::__construct
      *
      * @covers Lcobucci\JWT\ValidationData::has
      */
@@ -131,7 +199,7 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses   Lcobucci\JWT\ValidationData::__construct
      *
      * @covers Lcobucci\JWT\ValidationData::has
      */
@@ -145,7 +213,7 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses   Lcobucci\JWT\ValidationData::__construct
      *
      * @covers Lcobucci\JWT\ValidationData::has
      */
@@ -159,7 +227,7 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses   Lcobucci\JWT\ValidationData::__construct
      *
      * @covers Lcobucci\JWT\ValidationData::get
      */
@@ -173,7 +241,7 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      *
-     * @uses Lcobucci\JWT\ValidationData::__construct
+     * @uses   Lcobucci\JWT\ValidationData::__construct
      *
      * @covers Lcobucci\JWT\ValidationData::get
      */
@@ -200,7 +268,9 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
      * @param string $sub
      * @param string $iss
      * @param string $aud
-     * @param int $time
+     * @param int $iat
+     * @param int $nbf
+     * @param int $exp
      *
      * @return array
      */
@@ -209,16 +279,18 @@ class ValidationDataTest extends \PHPUnit_Framework_TestCase
         $sub = null,
         $iss = null,
         $aud = null,
-        $time = 1
+        $iat = 1,
+        $nbf = null,
+        $exp = null
     ) {
         return [
-            'jti' => $id !== null ? (string) $id : null,
-            'iss' => $iss !== null ? (string) $iss : null,
-            'aud' => $aud !== null ? (string) $aud : null,
-            'sub' => $sub !== null ? (string) $sub : null,
-            'iat' => $time,
-            'nbf' => $time,
-            'exp' => $time
+            'jti' => $id !== null ? (string)$id : null,
+            'iss' => $iss !== null ? (string)$iss : null,
+            'aud' => $aud !== null ? (string)$aud : null,
+            'sub' => $sub !== null ? (string)$sub : null,
+            'iat' => (int)$iat,
+            'nbf' => $nbf !== null ? (int)$nbf : (int)$iat,
+            'exp' => $exp !== null ? (int)$exp : (int)$iat,
         ];
     }
 }
