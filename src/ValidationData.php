@@ -24,20 +24,22 @@ class ValidationData
      */
     private $items;
 
-    private $timeFields = ['iat', 'nbf', 'exp'];
-
-    private $leeways = [];
+    /**
+     * The leeway (in seconds) to use when validating time claims
+     * @var int
+     */
+    private $leeway;
 
     /**
      * Initializes the object
      *
      * @param int $currentTime
-     * @param array $leeways
+     * @param int $leeway
      */
-    public function __construct($currentTime = null, $leeways = [])
+    public function __construct($currentTime = null, $leeway=0)
     {
         $currentTime = $currentTime ?: time();
-        $this->leeways = array_intersect_key($leeways, array_flip($this->timeFields));
+        $this->leeway = (int) $leeway;
 
         $this->items = [
             'jti' => null,
@@ -55,7 +57,7 @@ class ValidationData
      */
     public function setId($id)
     {
-        $this->items['jti'] = (string)$id;
+        $this->items['jti'] = (string) $id;
     }
 
     /**
@@ -65,7 +67,7 @@ class ValidationData
      */
     public function setIssuer($issuer)
     {
-        $this->items['iss'] = (string)$issuer;
+        $this->items['iss'] = (string) $issuer;
     }
 
     /**
@@ -75,7 +77,7 @@ class ValidationData
      */
     public function setAudience($audience)
     {
-        $this->items['aud'] = (string)$audience;
+        $this->items['aud'] = (string) $audience;
     }
 
     /**
@@ -85,7 +87,7 @@ class ValidationData
      */
     public function setSubject($subject)
     {
-        $this->items['sub'] = (string)$subject;
+        $this->items['sub'] = (string) $subject;
     }
 
     /**
@@ -95,13 +97,10 @@ class ValidationData
      */
     public function setCurrentTime($currentTime)
     {
-        foreach ($this->timeFields as $field) {
-            if (isset($this->leeways[$field]) && is_int($this->leeways[$field])) {
-                $this->items[$field] = (int)$currentTime + $this->leeways[$field];
-            } else {
-                $this->items[$field] = (int)$currentTime;
-            }
-        }
+        $currentTime = (int) $currentTime;
+        $this->items['iat'] = $currentTime + $this->leeway;
+        $this->items['nbf'] = $currentTime + $this->leeway;
+        $this->items['exp'] = $currentTime - $this->leeway;
     }
 
     /**
